@@ -78,7 +78,7 @@ async function loadGitRepoConnector(home: string) {
   process.env.HOME = home;
   process.env.USERPROFILE = home;
   const { createGitRepoConnector } =
-    await import("../../src/connectors/sources/git-repo.ts");
+    await import("../../../src/connectors/sources/git-repo.ts");
   return createGitRepoConnector();
 }
 

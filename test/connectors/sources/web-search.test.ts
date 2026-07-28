@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { OPENWIKI_TAVILY_API_KEY_ENV_KEY } from "../../src/config/constants.ts";
+import { OPENWIKI_TAVILY_API_KEY_ENV_KEY } from "../../../src/config/constants.ts";
 
 // Tavily is the one network boundary; the constructor options and per-query
 // invoke calls are captured so we can assert query building without hitting the
@@ -65,7 +65,7 @@ async function loadWebSearchConnector(home: string) {
   process.env.HOME = home;
   process.env.USERPROFILE = home;
   const { createWebSearchConnector } =
-    await import("../../src/connectors/sources/web-search.ts");
+    await import("../../../src/connectors/sources/web-search.ts");
   return createWebSearchConnector();
 }
 
@@ -223,6 +223,54 @@ describe("web-search connector query execution", () => {
     );
     // getOptionLimit clamps to a maximum of 20.
     expect(tavily.constructed[0]?.maxResults).toBe(20);
+  });
+
+  test("uses a configured time range verbatim and ignores the window", async () => {
+    const home = await createTempHome();
+    // An explicit, valid timeRange must win over any window-derived range.
+    await writeWebSearchConfig(home, {
+      enabled: true,
+      queries: ["openwiki"],
+      timeRange: "week",
+    });
+    process.env[OPENWIKI_TAVILY_API_KEY_ENV_KEY] = "tvly-key";
+    const connector = await loadWebSearchConnector(home);
+
+    const result = await connector.ingest({ windowHours: 6 });
+
+    expect(result.status).toBe("success");
+    expect(tavily.constructed[0]?.timeRange).toBe("week");
+
+    const dump = JSON.parse(
+      await readFile(result.rawFiles[0] ?? "", "utf8"),
+    ) as WebSearchDump;
+    expect(dump.timeRange).toBe("week");
+  });
+
+  test("normalizes null include flags and result limit to their defaults", async () => {
+    const home = await createTempHome();
+    // Null-valued flags and limit (malformed config) must coerce to the coded
+    // defaults rather than reach the Tavily client as null.
+    await writeWebSearchConfig(home, {
+      enabled: true,
+      includeAnswer: null,
+      includeImages: null,
+      includeRawContent: null,
+      maxResults: null,
+      queries: ["openwiki"],
+    });
+    process.env[OPENWIKI_TAVILY_API_KEY_ENV_KEY] = "tvly-key";
+    const connector = await loadWebSearchConnector(home);
+
+    const result = await connector.ingest();
+
+    expect(result.status).toBe("success");
+    expect(tavily.constructed[0]).toMatchObject({
+      includeAnswer: true,
+      includeImages: false,
+      includeRawContent: false,
+      maxResults: 5,
+    });
   });
 
   test("derives a day time range from a short window when none is configured", async () => {

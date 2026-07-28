@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 // the io layer, the MCP client (tool listing / execution), and the transport
 // sanitizer. All three are mocked so we assert only the branching and the
 // shape of what gets written.
-vi.mock("../../src/connectors/io.ts", () => ({
+vi.mock("../../../src/connectors/io.ts", () => ({
   createRunId: () => "run-1",
   readConnectorConfig: vi.fn(),
   readConnectorState: () => Promise.resolve({ version: 1 }),
@@ -17,12 +17,12 @@ vi.mock("../../src/connectors/io.ts", () => ({
   writeRawJson: vi.fn(() => Promise.resolve("/raw/mcp/run-1/output.json")),
 }));
 
-vi.mock("../../src/connectors/mcp-client.ts", () => ({
+vi.mock("../../../src/connectors/mcp-client.ts", () => ({
   executeMcpReadOnlyOperations: vi.fn(),
   listMcpTools: vi.fn(),
 }));
 
-vi.mock("../../src/connectors/mcp-runtime.ts", () => ({
+vi.mock("../../../src/connectors/mcp-runtime.ts", () => ({
   sanitizeMcpTransport: vi.fn(() => ({ redacted: true })),
 }));
 
@@ -30,14 +30,14 @@ import {
   readConnectorConfig,
   writeConnectorState,
   writeRawJson,
-} from "../../src/connectors/io.ts";
+} from "../../../src/connectors/io.ts";
 import {
   executeMcpReadOnlyOperations,
   listMcpTools,
-} from "../../src/connectors/mcp-client.ts";
-import { sanitizeMcpTransport } from "../../src/connectors/mcp-runtime.ts";
-import { createMcpConnector } from "../../src/connectors/sources/mcp.ts";
-import type { McpConnectorConfig } from "../../src/connectors/types.ts";
+} from "../../../src/connectors/mcp-client.ts";
+import { sanitizeMcpTransport } from "../../../src/connectors/mcp-runtime.ts";
+import { createMcpConnector } from "../../../src/connectors/sources/mcp.ts";
+import type { McpConnectorConfig } from "../../../src/connectors/types.ts";
 
 const INPUT = {
   description: "Notion MCP",
