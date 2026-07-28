@@ -38,7 +38,7 @@
     "prebuild": "pnpm run clean",
     "prepack": "pnpm run build",
     "start": "node dist/cli/cli.js",
-    "test": "vitest run",
+    "test": "pnpm run typecheck && pnpm run build && pnpm run coverage",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
